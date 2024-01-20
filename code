@@ -1,0 +1,377 @@
+//this code is by Aisha Kandeel, Hoda Sidani, Maya Abou Lteif, Reem Chaaban
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <stack>
+#include <cmath>
+#include <numeric>
+using namespace std;
+class node {
+public:
+	vector <string> adj;
+	string n;
+	node(string nn) : n(nn) {}
+};
+class graph {
+public:
+	typedef map<string, string> connectednodes;//two nodes connected by an edge
+	map<string, node*>nodes;//node pointer at string
+	typedef map<connectednodes, double> edges;//the two nodes connected with weight entered by user
+	edges e;
+	map<string, double> path;//map to track the paths
+	map<string, string>parentnode;
+	map<string, bool>white;//not visited
+	map<string, bool>grey;//inprogress
+	map<string, bool>black;//visited
+	stack<string> s;
+	graph() {}//default constructor
+	graph(map<string, string>p) :parentnode(p) {}
+	bool iscyclehelperundirected(graph& g, string u, node* n) {
+		g.grey[u] = true;
+		vector<string>v = n->adj;
+		for (int i = 0; i < v.size(); ++i) {
+			if (g.grey[v[i]] == false) {
+				g.parentnode[v[i]] = u;
+				iscyclehelperundirected(g, v[i], g.nodes[v[i]]);//recursive call
+			}
+			else if (g.parentnode[u] != v[i] && g.black[v[i]] == false) {
+				return true;
+			}
+		}
+		g.black[u] = true;
+	}
+	bool iscycleundirected(graph& g) {
+		if (iscyclehelperundirected) {
+			cout << "There is a cycle" << endl;
+		}
+		else {
+			cout << "There is no cycle" << endl;
+		}
+	}
+	bool iscyclehelperdirected(graph& g, string u, node* n) {
+		g.grey[u] = true;
+		vector<string>v = n->adj;
+		for (int i = 0; i < v.size(); ++i) {
+			if (g.grey[v[i]] == false) {
+				g.parentnode[v[i]] = u;
+				iscyclehelperundirected(g, v[i], g.nodes[v[i]]);//recursive call
+			}
+			else if (g.black[v[i]] == false) {
+				return true;
+			}
+		}
+		g.black[u] = true;
+	}
+	bool iscycledirected(graph& g) {
+		if (iscyclehelperdirected) {
+			cout << "There is a cycle" << endl;
+		}
+		else {
+			cout << "There is no cycle" << endl;
+		}
+	}
+	void insertnode(string& n) {
+		node* v;
+		v = new node(n);
+		nodes[n] = v;
+		return;
+	}
+	void deletenode(string& n) {
+		nodes.erase(n);
+		for (auto it = e.begin(); it != e.end();) {
+			if (it->first.first == n || it->first.second == n) {
+				it = e.erase(it);
+			}
+		}
+	}
+	void addedgeundirected(string x, string y, double w) {
+		edges.insert({ map<x,y>, w });//erasing the edges from the map
+		edges.insert({ map<y,x>, w });
+	}
+	void removeedgeundirected(string n, string v) {
+		edges.erase({ map<x,y>, w });
+		edges.erase({ map<y,x>, w });
+	}
+	void addedgedirected(string x, string y, double w) {
+		edges.insert({ map<x,y>, w });
+	}
+	void removeedgedirected(string n, string v) {
+		edges.erase({ map<x,y>, w });
+	}
+	void topological(graph& g) {
+		while (g.s.empty() == false) {
+			cout << g.s.top() << " ";
+			g.s.pop();
+		}
+	}
+	void DFSdirected(graph& g, string v)
+	{// we create a stack for DFS
+		stack<string> stack;
+		stack.push(v);
+		while (!stack.empty())
+		{
+			// we pop vertex from stack and print it
+			v = stack.top();
+			stack.pop();
+
+			// if the vertex is not visited before, print it and mark it as visited
+			if (black.find(v) == black.end())
+			{
+				cout << v << " ";
+				black[v] = true;
+			}
+			// get all adjacent vertices of the popped vertex v, and if they are not visited, then push them to the stack
+			for (auto& w : adj[v])
+			{
+				if (black.find(w.first) == black.end())
+				{
+					stack.push(w.first);
+				}
+			}
+		}
+	}
+	void DFSundirected(string startVertex) {
+		// Mark all the vertices as not visited
+		map<int, bool> visited;
+		for (int i = 0; i < nodes.size(); i++) {
+			visited[i] = false;
+		}
+		// Create a stack for DFS
+		vector<string> stack;
+		// Push the current source node
+		stack.push_back(startVertex);
+
+		while (!stack.empty()) {
+			// Pop a vertex from the stack and print it
+			string currentVertex = stack.back();
+			stack.pop_back();
+			// If the current vertex has not been visited, mark it as visited
+			// and push all its neighbors onto the stack
+			if (!black[currentVertex]) {
+				cout << currentVertex << " ";
+				black[currentVertex] = true;
+				for (string neighbor : adj[currentVertex]) {
+					if (!black[neighbor]) {
+						stack.push_back(neighbor);
+					}
+				}
+			}
+		}
+	}
+	void shortestpathdirected(graph& g, string src, string dest) {//bellman ford algorithm
+		if (iscycledirected) {
+			double total_sum = accumulate(e.begin(), e.end(), 0,
+				[&](const int prev_sum, const pair<string, double>& entry) {
+					double sumofedges = prev_sum + entry.second;
+					if (sumofedges < 0) {
+						cout << "there is an infinite negative cycle" << endl;
+					}
+					else {
+						for (auto const& map : g.e) {//initialize all edges to infinite
+							g.path[map.first] = INT_MAX;
+						}
+						for (int i = 1; i < e.size(); i++) {//relax all edges
+							for (int j = 0; j < e.size(); j++) {
+								double x = g->edges[j].src;
+								double y = g->edges[j].dest;
+								double weight = edges->second;
+								if (g.path[map.first] != INT_MAX && x + weight < y) {
+									y = x + weight;
+								}
+							}
+						}
+					}
+				});
+		}
+	}
+	void shortestpathundirected(graph& g, string src, string dest) {//bellmand ford algorithm
+		if (iscycleundirected) {
+			double total_sum = accumulate(e.begin(), e.end(), 0,
+				[&](const int prev_sum, const pair<string, double>& entry) {
+					double sumofedges = prev_sum + entry.second;
+					if (sumofedges < 0) {
+						cout << "there is an infinite negative cycle" << endl;
+					}
+					else {
+						for (auto const& map : g.e) {//initialize all edges to infinite
+							g.path[map.first] = INT_MAX;
+						}
+						for (int i = 1; i < e.size(); i++) {//relax all edges
+							for (int j = 0; j < e.size(); j++) {
+								double x = g->edges[j].src;
+								double y = g->edges[j].dest;
+								double weight = edges->second;
+								if (g.path[map.first] != INT_MAX && x + weight < y) {
+									y = x + weight;
+								}
+							}
+						}
+					}
+				});
+		}
+	}
+	// Update the weight of the edge between vertices u and v
+	void updateEdgeWeightundi(string u, string v, double w) {
+		// Update the weight of the edge from u to v
+		adj[u][v] = w;
+		// Update the weight of the edge from v to u
+		adj[v][u] = w;
+	}
+	// Update the weight of the edge between vertices u and v
+	void updateEdgeWeightdir(string u, string v, double w) {
+		// Update the weight of the edge from u to v
+		adj[u][v] = w;
+	}
+};
+
+int main()
+{
+	graph g;
+	cout << "Hello!" << endl;
+	cout << "Do you want to create a directed or an undirected graph?" << endl;
+	cout << "Enter 0 for directed \n Enter 1 for  undirected" << endl;
+
+	int n;
+	cin >> n;
+
+	if (n == 0 || n == 1) {
+		cout << "Loading graph..." << endl;
+	}
+	else {
+		cout << "Error! Input must be either 0 or 1." << endl;
+	}
+	int x;
+	while (x != 0)
+	{
+		cout << "If you want to insert a node, enter 1" << endl;
+		cout << "If you want to delete a node, enter 2" << endl;
+		cout << "If you want to insert a weighted edge, enter 3" << endl;
+		cout << "If you want to delete a weighted edge, enter 4" << endl;
+		cout << "If you want to update the weight of an edge, enter 5" << endl;
+		cout << "If you want to search for cycles, enter 6" << endl;
+		cout << "If you want to topologically sort the graph, enter 7" << endl;
+		cout << "If you want to perform DFS, enter 8" << endl;
+		cout << "If you want to find the shortest path, enter 9" << endl;
+		cout << "To terminate the program, enter 0" << endl;
+
+		cin >> x;
+
+		if (x == 1) {
+			cout << "Enter the name of the node: " << endl;
+			string nodename;
+			cin >> nodename;
+
+			g.insertnode(nodename);
+		}
+
+		else if (x == 2) {
+			cout << "Enter the name of the node to remove: " << endl;
+			string nodename;
+			cin >> nodename;
+			g.deletenode(nodename);
+		}
+		else if (x == 3) {
+			cout << "Enter the name of the first node to be connected: " << endl;
+			string node1;
+			cin >> node1;
+			cout << "Enter the name of the second node to be connected: " << endl;
+			string node2;
+			cin >> node2;
+			cout << "Enter the edge's desired weight" << endl;
+			double w;
+			cin >> w;
+
+			if (n == 0) {
+				g.addedgedirected(node1, node2, w);
+			}
+			else if (n == 1) {
+				g.addedgeundirected(node1, node2, w);
+			}
+		}
+		else if (x == 4)
+		{
+			cout << "Enter the name of the first node to be disconnected: " << endl;
+			string node1;
+			cin >> node1;
+			cout << "Enter the name of the second node to be disconnected: " << endl;
+			string node2;
+			cin >> node2;
+
+			if (n == 0) {
+				g.removeedgedirected(node1, node2);
+			}
+			else if (n == 1) {
+				g.removeedgeundirected(node1, node2);
+			}
+		}
+		else if (x == 5)
+		{
+			cout << "Enter the name of the first connected node: " << endl;
+			string node1;
+			cin >> node1;
+			cout << "Enter the name of the second connected node: " << endl;
+			string node2;
+			cin >> node2;
+			cout << "Enter the edge's new weight: " << endl;
+			int w;
+			cin >> w;
+			if (n == 0) {
+				g.updateEdgeWeightdir(node1, node2, w);
+			}
+			else if (n == 1) {
+				g.updateEdgeWeightundi(node1, node2, w);
+			}
+
+
+			else if (x == 6) {
+				if (n == 0) {
+					g.iscycledirected(g);
+				}
+				else if (n == 1) {
+					g.iscycleundirected(g);
+				}
+			}
+			else if (x == 7) {
+				if (n == 0) {
+					if (g.iscycledirected(g) == true) {
+						cout << "The directed graph is cyclic; we can't topologically sort it" << endl;
+					}
+					else {
+						g.topological(g);
+					}
+				}
+				else if (n == 1) {
+					cout << "The graph is undirected; we can't topologically sort it" << endl;
+				}
+			}
+
+		}
+		else if (x == 8) {
+			if (n == 0) {
+				g.DFSdirected;
+			}
+			else if (n == 1) {
+				g.DFSundirected;
+			}
+		}
+		else if (x == 9) {
+			string src, dest;
+			cout << "Enter your source node: " << endl;
+			cin >> src;
+			cout << "Enter your destination node: " << endl;
+			cin >> dest;
+			if (n == 0) {
+				g.shortestpathdirected(g, src, dest);
+			}
+			else if (n == 1) {
+				g.shortestpathundirected(g, src, dest);
+			}
+
+		}
+	}
+
+	cout << "Project terminated. Goodbye!" << endl;
+	return 0;
+}
